@@ -1,0 +1,24 @@
+---
+- name: Applying patches to Linux servers
+  hosts: prometheus
+  remote_user: vagrant
+  sudo: true
+  vars_files: 
+   # User defined variables for patching
+    - patching-vars.yml
+
+  pre_tasks:
+    - debug:
+        msg: "running pre-tasks inside play"
+
+  roles:
+    - linux-pre-patching
+    - linux-patching
+    - linux-post-patching
+
+  post_tasks:
+    - debug:
+        msg: "running post-tasks inside play"
+
+    
+...

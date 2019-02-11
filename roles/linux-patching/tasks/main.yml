@@ -1,0 +1,4 @@
+---
+# tasks file for roles/linux-patching
+- debug:
+    msg: "Inside tasks of roles/linux-patching"
