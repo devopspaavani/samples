@@ -1,0 +1,131 @@
+Here’s a complete Ansible playbook that shows how to handle API pagination using the uri module. This example demonstrates how to loop through offset-based pagination, collect all results, and optionally store them in a file.
+
+✅ Example: API Pagination Using offset and limit
+
+Assume the API returns:
+
+{
+  "results": [...],
+  "total": 95,
+  "limit": 10,
+  "offset": 0
+}
+
+🔧 Ansible Playbook
+
+---
+- name: Fetch all paginated API data using Ansible
+  hosts: localhost
+  gather_facts: false
+  vars:
+    base_url: "https://api.example.com/data"
+    limit: 10
+    offset: 0
+    all_data: []
+
+  tasks:
+
+    - name: Loop to fetch paginated results
+      uri:
+        url: "{{ base_url }}?limit={{ limit }}&offset={{ offset }}"
+        method: GET
+        return_content: yes
+        status_code: 200
+      register: api_response
+      until: api_response.json.results | length == 0
+      retries: 20  # max pages (you can increase if needed)
+      delay: 1
+
+    - name: Set fact for all results (1st batch)
+      set_fact:
+        all_data: "{{ api_response.json.results }}"
+
+    - name: Fetch all remaining pages
+      vars:
+        loop_offset: "{{ range(limit, api_response.json.total, limit) | list }}"
+      loop: "{{ loop_offset }}"
+      loop_control:
+        loop_var: offset
+      uri:
+        url: "{{ base_url }}?limit={{ limit }}&offset={{ offset }}"
+        method: GET
+        return_content: yes
+        status_code: 200
+      register: paginated
+
+    - name: Append results to all_data
+      set_fact:
+        all_data: "{{ all_data + item.json.results }}"
+      loop: "{{ paginated.results }}"
+      loop_control:
+        label: "{{ item.json.offset }}"
+
+    - name: Write all data to file
+      copy:
+        content: "{{ all_data | to_nice_json }}"
+        dest: "./full_api_data.json"
+
+📝 Notes
+	•	This assumes API response includes total, offset, and results.
+	•	You can adapt it for page-based or cursor-based pagination as well.
+	•	You can enable authentication using headers: in the uri module.
+
+If you give me the real API structure (URL format + sample response), I’ll tailor this playbook exactly for your case.
+
+
+Here is the complete Ansible playbook to fetch 20,000 records in batches of 2,000 using offset-based pagination and save them into a JSON file.
+
+✅ Ansible Playbook: Paginate in Batches of 2000
+
+---
+- name: Fetch API data in batches of 2000 (total 20000 records)
+  hosts: localhost
+  gather_facts: false
+  vars:
+    base_url: "https://api.example.com/data"  # Replace with your real API
+    total_records: 20000
+    batch_size: 2000
+    all_records: []
+
+  tasks:
+
+    - name: Generate list of offsets (0, 2000, 4000, ..., 18000)
+      set_fact:
+        offset_list: "{{ range(0, total_records, batch_size) | list }}"
+
+    - name: Fetch records in batches
+      uri:
+        url: "{{ base_url }}?limit={{ batch_size }}&offset={{ item }}"
+        method: GET
+        return_content: yes
+        status_code: 200
+        headers:
+          Authorization: "Bearer {{ api_token }}"  # Optional: use if API needs token
+      register: paginated_response
+      loop: "{{ offset_list }}"
+      loop_control:
+        label: "Fetching offset {{ item }}"
+
+    - name: Combine all results into all_records
+      set_fact:
+        all_records: "{{ all_records + item.json.results }}"
+      loop: "{{ paginated_response.results }}"
+      loop_control:
+        label: "Combining results from offset"
+
+    - name: Save all collected data into a file
+      copy:
+        content: "{{ all_records | to_nice_json }}"
+        dest: "./full_api_records.json"
+
+🔧 Notes:
+	•	Replace https://api.example.com/data with your actual API endpoint.
+	•	Replace Authorization header if your API needs a token.
+	•	If your API returns data in a different key (e.g., not results), update item.json.results accordingly.
+
+Let me know if you want to:
+	•	Use username/password authentication
+	•	Push this data to a database or another API
+	•	Turn this into a role or AWX job template
+
+I’ll tailor it as per your use case.
