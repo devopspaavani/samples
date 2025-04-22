@@ -129,3 +129,61 @@ Let me know if you want to:
 	•	Turn this into a role or AWX job template
 
 I’ll tailor it as per your use case.
+######################
+Here is the complete Ansible playbook to fetch 20,000 records in batches of 2,000 using offset-based pagination and save them into a JSON file.
+
+✅ Ansible Playbook: Paginate in Batches of 2000
+
+---
+- name: Fetch API data in batches of 2000 (total 20000 records)
+  hosts: localhost
+  gather_facts: false
+  vars:
+    base_url: "https://api.example.com/data"  # Replace with your real API
+    total_records: 20000
+    batch_size: 2000
+    all_records: []
+
+  tasks:
+
+    - name: Generate list of offsets (0, 2000, 4000, ..., 18000)
+      set_fact:
+        offset_list: "{{ range(0, total_records, batch_size) | list }}"
+
+    - name: Fetch records in batches
+      uri:
+        url: "{{ base_url }}?limit={{ batch_size }}&offset={{ item }}"
+        method: GET
+        return_content: yes
+        status_code: 200
+        headers:
+          Authorization: "Bearer {{ api_token }}"  # Optional: use if API needs token
+      register: paginated_response
+      loop: "{{ offset_list }}"
+      loop_control:
+        label: "Fetching offset {{ item }}"
+
+    - name: Combine all results into all_records
+      set_fact:
+        all_records: "{{ all_records + item.json.results }}"
+      loop: "{{ paginated_response.results }}"
+      loop_control:
+        label: "Combining results from offset"
+
+    - name: Save all collected data into a file
+      copy:
+        content: "{{ all_records | to_nice_json }}"
+        dest: "./full_api_records.json"
+
+🔧 Notes:
+	•	Replace https://api.example.com/data with your actual API endpoint.
+	•	Replace Authorization header if your API needs a token.
+	•	If your API returns data in a different key (e.g., not results), update item.json.results accordingly.
+
+Let me know if you want to:
+	•	Use username/password authentication
+	•	Push this data to a database or another API
+	•	Turn this into a role or AWX job template
+
+I’ll tailor it as per your use case.
+
