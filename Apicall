@@ -187,3 +187,19 @@ Let me know if you want to:
 
 I’ll tailor it as per your use case.
 
+
+
+Category,Pros,Cons
+Speed,Deletes resources very fast across multiple regions and types.,Too fast — wrong settings can wipe critical environments instantly.
+Simplicity,Easy to install, one command cleanup.,No deep built-in “undo” or rollback mechanism.
+Automation,Can be scripted in cronjobs, Jenkins, GitLab CI for auto-sandbox cleanups.,Must be handled carefully — automation + destructive tool = risk!
+Cost Saving,Cleans up forgotten resources to save big cloud costs in test accounts.,Deleting wrong resources can cause unexpected financial damage if in wrong account.
+Tag Filtering,Supports fine control using --target-tags, --exclude-tags, and --older-than.,But tag filtering is basic — no complex policy enforcement like Cloud Custodian.
+Multi-region,Can nuke across multiple regions in one command.,Regions must be explicitly enabled or listed.
+Dry-run Mode,Provides --dry-run to preview without deletion (safe testing).,Dry-run must be remembered — default is destructive if --force is used without thinking.
+Open Source,Free, no licensing cost.,Maintained by Gruntwork — if Gruntwork stops maintaining, community support could slow down.
+Supports AWS (full) and Azure (beta),Multi-cloud starting, helpful for hybrid environments.,Azure support is still immature compared to AWS. GCP, OCI not supported at all.
+Lightweight,No server install, simple CLI tool.,Not enterprise-grade management like ServiceNow / native cloud policies.
+Telemetry,Easy opt-out with DISABLE_TELEMETRY=true.,Default is opt-in telemetry (privacy concern if you don’t disable it).
+Highly Configurable via YAML,Allows config-driven nuking (account allow/block list, resource inclusion/exclusion).,No “complex condition” logic — YAML configs are simple allow/exclude filters only.
+
